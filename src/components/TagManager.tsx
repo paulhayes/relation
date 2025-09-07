@@ -2,9 +2,10 @@ import { useState } from 'react'
 import { useAppStore } from '../stores/appStore'
 
 function TagManager() {
-  const { tags, addTag, removeTag, setShowTagManager } = useAppStore()
+  const { tags, addTag, removeTag, updateTagColor, setShowTagManager } = useAppStore()
   const [newTagName, setNewTagName] = useState('')
   const [newTagColor, setNewTagColor] = useState('#3b82f6')
+  const [editingTag, setEditingTag] = useState<string | null>(null)
 
   const predefinedColors = [
     '#3b82f6', // Blue
@@ -90,21 +91,47 @@ function TagManager() {
           <h3 className="font-medium mb-3">Existing Tags</h3>
           <div className="space-y-2">
             {tags.map((tag) => (
-              <div key={tag.name} className="flex items-center justify-between p-3 bg-card-dark rounded-lg">
-                <div className="flex items-center space-x-3">
-                  <div 
-                    className="w-4 h-4 rounded-full"
-                    style={{ backgroundColor: tag.color }}
-                  />
-                  <span>{tag.name}</span>
-                  <span className="text-sm text-secondary-dark">({tag.count} contacts)</span>
+              <div key={tag.name} className="p-3 bg-card-dark rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <button 
+                      className="w-4 h-4 rounded-full border-2 border-transparent hover:border-gray-500 transition-colors"
+                      style={{ backgroundColor: tag.color }}
+                      onClick={() => setEditingTag(editingTag === tag.name ? null : tag.name)}
+                      title="Click to change color"
+                    />
+                    <span>{tag.name}</span>
+                    <span className="text-sm text-secondary-dark">({tag.count} contacts)</span>
+                  </div>
+                  <button
+                    onClick={() => handleRemoveTag(tag.name)}
+                    className="text-red-400 hover:text-red-300 text-sm px-2 py-1 rounded hover:bg-red-400/10"
+                  >
+                    Remove
+                  </button>
                 </div>
-                <button
-                  onClick={() => handleRemoveTag(tag.name)}
-                  className="text-red-400 hover:text-red-300 text-sm px-2 py-1 rounded hover:bg-red-400/10"
-                >
-                  Remove
-                </button>
+                
+                {/* Color picker for this tag */}
+                {editingTag === tag.name && (
+                  <div className="mt-3 pt-3 border-t border-gray-700">
+                    <p className="text-sm text-secondary-dark mb-2">Choose new color:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {predefinedColors.map((color) => (
+                        <button
+                          key={color}
+                          onClick={() => {
+                            updateTagColor(tag.name, color)
+                            setEditingTag(null)
+                          }}
+                          className={`w-8 h-8 rounded-full border-2 transition-colors ${
+                            tag.color === color ? 'border-white' : 'border-gray-600 hover:border-gray-400'
+                          }`}
+                          style={{ backgroundColor: color }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
             
