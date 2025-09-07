@@ -12,16 +12,11 @@ interface ConnectionLinesProps {
 
 function ConnectionLines({ contacts, tags, nodeRefs, visible }: ConnectionLinesProps) {
   const groupRef = useRef<THREE.Group>(null)
-  const linesRef = useRef<{ [key: string]: THREE.Line }>({})
+  const meshByColorRef = useRef<{ [color: string]: THREE.Mesh }>({})
 
-  // Generate connections between nodes with shared tags
-  const connections = useMemo(() => {
-    const connectionsList: Array<{
-      id: string
-      contact1: Contact
-      contact2: Contact
-      sharedTags: string[]
-    }> = []
+  // Generate connections between nodes with shared tags, grouped by color
+  const connectionsByColor = useMemo(() => {
+    const colorGroups: { [color: string]: Array<{ node1Id: string, node2Id: string }> } = {}
 
     // Only calculate connections between visible nodes
     const visibleContacts = contacts.filter(contact => nodeRefs.current[contact.id])
@@ -37,96 +32,134 @@ function ConnectionLines({ contacts, tags, nodeRefs, visible }: ConnectionLinesP
         )
 
         if (sharedTags.length > 0) {
-          connectionsList.push({
-            id: `${contact1.id}-${contact2.id}`,
-            contact1,
-            contact2,
-            sharedTags
+          // Use the primary shared tag color
+          const primaryTag = sharedTags[0]
+          const tagColor = tags.find(t => t.name === primaryTag)?.color || '#64748b'
+          
+          if (!colorGroups[tagColor]) {
+            colorGroups[tagColor] = []
+          }
+          
+          colorGroups[tagColor].push({
+            node1Id: contact1.id,
+            node2Id: contact2.id
           })
         }
       })
     })
 
-    return connectionsList
+    return colorGroups
   }, [contacts, tags, nodeRefs])
 
   useFrame(() => {
     if (!visible || !groupRef.current) return
 
-    // Clear old lines
-    Object.values(linesRef.current).forEach(line => {
-      if (groupRef.current?.children.includes(line)) {
-        groupRef.current.remove(line)
+    // Clear old meshes
+    Object.values(meshByColorRef.current).forEach(mesh => {
+      if (groupRef.current?.children.includes(mesh)) {
+        groupRef.current.remove(mesh)
+      }
+      mesh.geometry.dispose()
+      if (Array.isArray(mesh.material)) {
+        mesh.material.forEach(mat => mat.dispose())
+      } else {
+        mesh.material.dispose()
       }
     })
-    linesRef.current = {}
+    meshByColorRef.current = {}
 
-    // Create new lines for current connections
-    connections.forEach(connection => {
-      const node1 = nodeRefs.current[connection.contact1.id]
-      const node2 = nodeRefs.current[connection.contact2.id]
+    // Create merged geometry for each color
+    Object.entries(connectionsByColor).forEach(([color, connections]) => {
+      if (connections.length === 0) return
 
-      if (!node1 || !node2) return
+      const geometries: THREE.CylinderGeometry[] = []
+      const matrices: THREE.Matrix4[] = []
 
-      // Create line geometry
-      const points = [
-        node1.position.clone(),
-        node2.position.clone()
-      ]
+      connections.forEach(connection => {
+        const node1 = nodeRefs.current[connection.node1Id]
+        const node2 = nodeRefs.current[connection.node2Id]
 
-      const geometry = new THREE.BufferGeometry().setFromPoints(points)
-      
-      // Get the primary shared tag color (first shared tag)
-      const primaryTag = connection.sharedTags[0]
-      const tagColor = tags.find(t => t.name === primaryTag)?.color || '#64748b'
-      
-      // Create material with transparency and thick lines
-      const material = new THREE.LineBasicMaterial({
-        color: new THREE.Color(tagColor),
-        transparent: true,
-        opacity: 0.15, // Very faint
-        linewidth: 10 // Note: linewidth may not work on all systems, but we'll try
-      })
+        if (!node1 || !node2) return
 
-      const line = new THREE.Line(geometry, material)
-      linesRef.current[connection.id] = line
-      groupRef.current?.add(line)
+        const distance = node1.position.distanceTo(node2.position)
+        if (distance === 0) return
 
-      // For systems that don't support linewidth, we can create a thick line using a cylinder
-      // This provides consistent thick lines across all systems
-      const distance = node1.position.distanceTo(node2.position)
-      if (distance > 0) {
-        // Remove the thin line
-        groupRef.current?.remove(line)
+        // Create cylinder geometry
+        const geometry = new THREE.CylinderGeometry(0.3, 0.3, distance, 8)
         
-        // Create thick line using cylinder geometry (same diameter as nodes: 0.6)
-        const cylinderGeometry = new THREE.CylinderGeometry(0.3, 0.3, distance, 8)
-        const cylinderMaterial = new THREE.MeshBasicMaterial({
-          color: new THREE.Color(tagColor),
-          transparent: true,
-          opacity: 0.15
-        })
-        
-        const cylinder = new THREE.Mesh(cylinderGeometry, cylinderMaterial)
-        
-        // Position and orient cylinder between the two nodes
+        // Create transformation matrix for this cylinder
         const midpoint = new THREE.Vector3()
           .addVectors(node1.position, node2.position)
           .multiplyScalar(0.5)
         
-        cylinder.position.copy(midpoint)
-        
-        // Orient cylinder to point from node1 to node2
         const direction = new THREE.Vector3()
           .subVectors(node2.position, node1.position)
           .normalize()
         
-        cylinder.lookAt(node2.position)
-        cylinder.rotateX(Math.PI / 2) // Cylinder is created along Y axis, rotate to align with direction
+        // Create matrix for position and rotation
+        const matrix = new THREE.Matrix4()
+        const up = new THREE.Vector3(0, 1, 0)
+        const quaternion = new THREE.Quaternion().setFromUnitVectors(up, direction)
+        matrix.compose(midpoint, quaternion, new THREE.Vector3(1, 1, 1))
         
-        linesRef.current[connection.id] = cylinder as any
-        groupRef.current?.add(cylinder)
+        geometries.push(geometry)
+        matrices.push(matrix)
+      })
+
+      if (geometries.length === 0) return
+
+      // Merge all geometries of the same color into one
+      const mergedGeometry = new THREE.BufferGeometry()
+      const positionArrays: number[] = []
+      const normalArrays: number[] = []
+      const indexArrays: number[] = []
+      let indexOffset = 0
+
+      geometries.forEach((geom, i) => {
+        // Apply transformation matrix to geometry
+        geom.applyMatrix4(matrices[i])
+        
+        // Get geometry attributes
+        const positions = geom.attributes.position.array as number[]
+        const normals = geom.attributes.normal.array as number[]
+        const indices = geom.index?.array as number[]
+
+        // Add to merged arrays
+        positionArrays.push(...positions)
+        normalArrays.push(...normals)
+        
+        if (indices) {
+          const offsetIndices = indices.map(index => index + indexOffset)
+          indexArrays.push(...offsetIndices)
+          indexOffset += positions.length / 3
+        }
+
+        // Dispose individual geometry
+        geom.dispose()
+      })
+
+      // Set merged geometry attributes
+      mergedGeometry.setAttribute('position', new THREE.Float32BufferAttribute(positionArrays, 3))
+      mergedGeometry.setAttribute('normal', new THREE.Float32BufferAttribute(normalArrays, 3))
+      if (indexArrays.length > 0) {
+        mergedGeometry.setIndex(indexArrays)
       }
+
+      // Create material
+      const material = new THREE.MeshBasicMaterial({
+        color: new THREE.Color(color),
+        transparent: true,
+        opacity: 0.15,
+        depthWrite: false,
+        depthTest: true
+      })
+
+      // Create single mesh for this color
+      const mesh = new THREE.Mesh(mergedGeometry, material)
+      mesh.renderOrder = -1
+      
+      meshByColorRef.current[color] = mesh
+      groupRef.current?.add(mesh)
     })
   })
 

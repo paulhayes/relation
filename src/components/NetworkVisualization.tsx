@@ -50,6 +50,15 @@ function NetworkVisualization() {
           <directionalLight position={[10, 10, 5]} intensity={0.5} />
           <pointLight position={[0, 0, 0]} intensity={0.3} />
           
+          {/* Render connection lines first so they appear behind nodes */}
+          <ConnectionLines
+            contacts={visibleContacts}
+            tags={tags}
+            nodeRefs={nodeRefs}
+            visible={forceSettings.visualizeConnections}
+          />
+          
+          {/* Render nodes after lines so they appear in front */}
           {visibleContacts.map((contact) => (
             <ContactNode
               key={contact.id}
@@ -65,13 +74,6 @@ function NetworkVisualization() {
             tags={tags}
             nodeRefs={nodeRefs}
             forceSettings={forceSettings}
-          />
-
-          <ConnectionLines
-            contacts={visibleContacts}
-            tags={tags}
-            nodeRefs={nodeRefs}
-            visible={forceSettings.visualizeConnections}
           />
           
           <OrbitControls 
