@@ -4,6 +4,7 @@ import NetworkVisualization from './components/NetworkVisualization'
 import ContactSidebar from './components/ContactSidebar'
 import TagLegend from './components/TagLegend'
 import TagManager from './components/TagManager'
+import ErrorBoundary from './components/ErrorBoundary'
 import { useAppStore, mockContacts } from './stores/appStore'
 import { googleAuthService } from './services/googleAuth'
 
@@ -149,11 +150,19 @@ function App() {
           </div>
         ) : (
           <>
-            <ContactSidebar />
+            <ErrorBoundary>
+              <ContactSidebar />
+            </ErrorBoundary>
             <div className="flex-1 relative">
-              <NetworkVisualization />
-              <TagLegend />
-              {showTagManager && <TagManager />}
+              <ErrorBoundary>
+                <NetworkVisualization />
+              </ErrorBoundary>
+              <ErrorBoundary>
+                <TagLegend />
+              </ErrorBoundary>
+              <ErrorBoundary>
+                {showTagManager && <TagManager />}
+              </ErrorBoundary>
             </div>
           </>
         )}
