@@ -73,7 +73,7 @@ function ForceSystem({ contacts, tags, nodeRefs, forceSettings }: ForceSystemPro
 
         // Apply spring force (positive displacement pushes apart, negative pulls together)
         
-        const forceVector = (hasSharedTags) ? direction.clone().multiplyScalar(springForce) : direction.clone().multiplyScalar(-1/distance*distance)
+        const forceVector = (hasSharedTags) ? direction.clone().multiplyScalar(springForce) : direction.clone().multiplyScalar(-0.1/distance*distance)
         
         forces.current[contact1.id].add(forceVector)
         forces.current[contact2.id].sub(forceVector)
