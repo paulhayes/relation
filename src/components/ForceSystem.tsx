@@ -14,6 +14,7 @@ interface ForceSystemProps {
 function ForceSystem({ contacts, tags, nodeRefs, forceSettings }: ForceSystemProps) {
   const forces = useRef<{ [key: string]: THREE.Vector3 }>({})
   const velocities = useRef<{ [key: string]: THREE.Vector3 }>({})
+  const maxDelta = 1/30 // Cap delta at 30fps to prevent large jumps
 
   useEffect(() => {
     // Initialize forces and velocities for each contact
@@ -27,7 +28,9 @@ function ForceSystem({ contacts, tags, nodeRefs, forceSettings }: ForceSystemPro
     })
   }, [contacts])
 
-  useFrame((_, delta) => {
+  useFrame((_, rawDelta) => {
+    // Cap delta time to prevent large jumps when window regains focus
+    const delta = Math.min(rawDelta, maxDelta)
     // Reset forces
     Object.keys(forces.current).forEach(id => {
       forces.current[id].set(0, 0, 0)
