@@ -120,9 +120,9 @@ function ConnectionLines({ contacts, tags, nodeRefs, visible }: ConnectionLinesP
         geom.applyMatrix4(matrices[i])
         
         // Get geometry attributes
-        const positions = geom.attributes.position.array as number[]
-        const normals = geom.attributes.normal.array as number[]
-        const indices = geom.index?.array as number[]
+        const positions = Array.from(geom.attributes.position.array)
+        const normals = Array.from(geom.attributes.normal.array)
+        const indices = geom.index ? Array.from(geom.index.array) : undefined
 
         // Add to merged arrays
         positionArrays.push(...positions)

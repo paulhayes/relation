@@ -21,15 +21,42 @@ function App() {
   useEffect(() => {
     // Check for existing authentication on startup
     const checkExistingAuth = async () => {
-      const urlParams = new URLSearchParams(window.location.search)
-      const authCode = urlParams.get('code')
+      // First check for tokens in Electron storage
+      const hasElectronTokens = await googleAuthService.checkElectronTokens()
       
-      // Handle OAuth callback if present
-      if (authCode && window.location.pathname === '/auth/callback') {
+      // Check if user is already authenticated (has stored tokens)
+      if (hasElectronTokens || googleAuthService.isAuthenticated()) {
+        useAppStore.setState({ isLoading: true })
+        
+        // Validate the stored token
+        const isValidToken = await googleAuthService.validateToken()
+        
+        if (isValidToken) {
+          useAppStore.setState({ isAuthenticated: true, isLoading: false })
+          
+          // Try to load contacts for already authenticated user
+          try {
+            await loadContacts()
+          } catch (contactError) {
+            console.error('Failed to load contacts for existing auth:', contactError)
+            // Fall back to mock data if contacts loading fails
+            useAppStore.setState({ contacts: mockContacts })
+            useAppStore.getState().refreshTagsFromContacts()
+          }
+        } else {
+          // Token is invalid, user needs to re-authenticate
+          useAppStore.setState({ isAuthenticated: false, isLoading: false })
+        }
+      }
+    }
+    
+    // Set up OAuth callback listener for Electron
+    if (typeof window !== 'undefined' && (window as any).electronAPI) {
+      (window as any).electronAPI.onOAuthCodeReceived(async (code: string) => {
         useAppStore.setState({ isLoading: true })
         
         try {
-          await googleAuthService.exchangeCodeForTokens(authCode)
+          await googleAuthService.exchangeCodeForTokens(code)
           useAppStore.setState({ isAuthenticated: true, isLoading: false })
           
           // Load contacts after authentication
@@ -41,39 +68,11 @@ function App() {
             useAppStore.setState({ contacts: mockContacts })
             useAppStore.getState().refreshTagsFromContacts()
           }
-          
-          // Clear the callback URL
-          window.history.replaceState({}, document.title, '/')
         } catch (error) {
           console.error('Failed to exchange code for tokens:', error)
           useAppStore.setState({ isLoading: false })
         }
-      } else {
-        // Check if user is already authenticated (has stored tokens)
-        if (googleAuthService.isAuthenticated()) {
-          useAppStore.setState({ isLoading: true })
-          
-          // Validate the stored token
-          const isValidToken = await googleAuthService.validateToken()
-          
-          if (isValidToken) {
-            useAppStore.setState({ isAuthenticated: true, isLoading: false })
-            
-            // Try to load contacts for already authenticated user
-            try {
-              await loadContacts()
-            } catch (contactError) {
-              console.error('Failed to load contacts for existing auth:', contactError)
-              // Fall back to mock data if contacts loading fails
-              useAppStore.setState({ contacts: mockContacts })
-              useAppStore.getState().refreshTagsFromContacts()
-            }
-          } else {
-            // Token is invalid, user needs to re-authenticate
-            useAppStore.setState({ isAuthenticated: false, isLoading: false })
-          }
-        }
-      }
+      })
     }
     
     checkExistingAuth()

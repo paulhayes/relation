@@ -4,7 +4,7 @@ class GoogleAuthService {
   private config: GoogleAuthConfig = {
     clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID || 'demo-client-id',
     clientSecret: import.meta.env.VITE_GOOGLE_CLIENT_SECRET || 'demo-client-secret',
-    redirectUri: 'http://localhost:3000/auth/callback',
+    redirectUri: 'http://localhost:3001/auth/callback',
     scopes: [
       'https://www.googleapis.com/auth/contacts.readonly',
       'https://www.googleapis.com/auth/contacts',
@@ -17,11 +17,11 @@ class GoogleAuthService {
   private refreshToken: string | null = null
 
   constructor() {
-    // Load tokens from localStorage on initialization
-    this.loadTokensFromStorage()
+    // Load tokens from localStorage synchronously
+    this.loadTokensFromStorageSync()
   }
 
-  private loadTokensFromStorage() {
+  private loadTokensFromStorageSync() {
     try {
       const storedAccessToken = localStorage.getItem('google_access_token')
       const storedRefreshToken = localStorage.getItem('google_refresh_token')
@@ -36,6 +36,7 @@ class GoogleAuthService {
       console.error('Failed to load tokens from storage:', error)
     }
   }
+
 
   private saveTokensToStorage() {
     try {
@@ -78,34 +79,55 @@ class GoogleAuthService {
   }
 
   async exchangeCodeForTokens(authCode: string): Promise<{ access_token: string, refresh_token?: string }> {
-    const response = await fetch('https://oauth2.googleapis.com/token', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: new URLSearchParams({
-        client_id: this.config.clientId,
-        client_secret: this.config.clientSecret,
-        code: authCode,
-        grant_type: 'authorization_code',
-        redirect_uri: this.config.redirectUri,
-      }),
-    })
+    // Check if we're in Electron
+    if (typeof window !== 'undefined' && (window as any).electronAPI) {
+      // Use Electron's token exchange
+      const tokens = await (window as any).electronAPI.exchangeOAuthCode(
+        authCode, 
+        this.config.clientId, 
+        this.config.clientSecret
+      )
+      
+      this.accessToken = tokens.access_token
+      if (tokens.refresh_token) {
+        this.refreshToken = tokens.refresh_token
+      }
+      
+      // Save tokens to localStorage as well
+      this.saveTokensToStorage()
+      
+      return tokens
+    } else {
+      // Fallback to direct fetch for web version
+      const response = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          client_id: this.config.clientId,
+          client_secret: this.config.clientSecret,
+          code: authCode,
+          grant_type: 'authorization_code',
+          redirect_uri: this.config.redirectUri,
+        }),
+      })
 
-    if (!response.ok) {
-      throw new Error('Failed to exchange code for tokens')
-    }
+      if (!response.ok) {
+        throw new Error('Failed to exchange code for tokens')
+      }
 
-    const tokens = await response.json()
-    this.accessToken = tokens.access_token
-    if (tokens.refresh_token) {
-      this.refreshToken = tokens.refresh_token
+      const tokens = await response.json()
+      this.accessToken = tokens.access_token
+      if (tokens.refresh_token) {
+        this.refreshToken = tokens.refresh_token
+      }
+      
+      // Save tokens to localStorage
+      this.saveTokensToStorage()
+      
+      return tokens
     }
-    
-    // Save tokens to localStorage
-    this.saveTokensToStorage()
-    
-    return tokens
   }
 
   async refreshAccessToken(): Promise<string> {
@@ -193,12 +215,38 @@ class GoogleAuthService {
     return !!this.accessToken
   }
 
+  async checkElectronTokens() {
+    // Check if we're in Electron and try to get tokens from main process
+    if (typeof window !== 'undefined' && (window as any).electronAPI) {
+      try {
+        const electronTokens = await (window as any).electronAPI.getOAuthTokens()
+        if (electronTokens?.access_token) {
+          this.accessToken = electronTokens.access_token
+          if (electronTokens.refresh_token) {
+            this.refreshToken = electronTokens.refresh_token
+          }
+          // Sync to localStorage
+          this.saveTokensToStorage()
+          return true
+        }
+      } catch (error) {
+        console.log('No tokens in Electron storage yet')
+      }
+    }
+    return false
+  }
+
   logout() {
     this.accessToken = null
     this.refreshToken = null
     
     // Clear tokens from localStorage
     this.clearTokensFromStorage()
+    
+    // Clear tokens from Electron if available
+    if (typeof window !== 'undefined' && (window as any).electronAPI) {
+      (window as any).electronAPI.clearOAuthTokens().catch(console.error)
+    }
   }
 }
 

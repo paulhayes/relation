@@ -49,13 +49,15 @@ export const useAppStore = create<AppState>((set, get) => ({
     
     try {
       const authUrl = googleAuthService.generateAuthUrl()
-      
       // Use Electron API to open browser
       if (typeof window !== 'undefined' && (window as any).electronAPI) {
         await (window as any).electronAPI.openOAuthUrl(authUrl)
       } else {
         // Redirect to Google OAuth in the same window
-        window.location.href = authUrl
+        //window.location.href = authUrl
+        console.log("meep");
+        console.log(window);
+        console.log((window as any).electronAPI);
       }
     } catch (error) {
       console.error('Authentication failed:', error)
