@@ -4,7 +4,7 @@ import ContactNode from './ContactNode'
 import ForceSystem from './ForceSystem'
 import ConnectionLines from './ConnectionLines'
 import ForceControls, { ForceSettings } from './ForceControls'
-import { Suspense, useRef, useState } from 'react'
+import { Suspense, useRef, useState, useEffect } from 'react'
 import { useAppStore } from '../stores/appStore'
 import * as THREE from 'three'
 
@@ -19,10 +19,19 @@ const defaultForces: ForceSettings = {
 }
 
 function NetworkVisualization() {
-  const { contacts, tags } = useAppStore()
+  const { contacts, tags, cameraTarget } = useAppStore()
   const nodeRefs = useRef<{ [key: string]: THREE.Object3D | null }>({})
   const [forceSettings, setForceSettings] = useState<ForceSettings>(defaultForces)
-  
+  const controlsRef = useRef<any>(null)
+
+  // Update camera target when cameraTarget changes
+  useEffect(() => {
+    if (cameraTarget && controlsRef.current) {
+      controlsRef.current.target.set(cameraTarget[0], cameraTarget[1], cameraTarget[2])
+      controlsRef.current.update()
+    }
+  }, [cameraTarget])
+
   // Filter contacts based on tag visibility - only show contacts with tags
   const visibleContacts = contacts.filter(contact => 
     contact.tags.length > 0 && 
@@ -76,9 +85,10 @@ function NetworkVisualization() {
             forceSettings={forceSettings}
           />
           
-          <OrbitControls 
-            enablePan={true} 
-            enableZoom={true} 
+          <OrbitControls
+            ref={controlsRef}
+            enablePan={true}
+            enableZoom={true}
             enableRotate={true}
             minDistance={5}
             maxDistance={50}

@@ -7,16 +7,19 @@ interface AppState {
   // Authentication
   isAuthenticated: boolean
   isLoading: boolean
-  
+
   // Contacts
   contacts: Contact[]
   selectedContact: Contact | null
-  
+
   // Tags
   tags: Tag[]
-  
+
   // UI State
   showTagManager: boolean
+
+  // Camera
+  cameraTarget: [number, number, number] | null
   
   // Actions
   authenticate: () => Promise<void>
@@ -32,6 +35,7 @@ interface AppState {
   refreshTagsFromContacts: () => void
   loadTagSettings: () => { [name: string]: { color: string, visible: boolean } }
   saveTagSettings: () => void
+  setCameraTarget: (target: [number, number, number] | null) => void
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -42,6 +46,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   selectedContact: null,
   tags: [],
   showTagManager: false,
+  cameraTarget: null,
 
   // Actions
   authenticate: async () => {
@@ -208,18 +213,22 @@ export const useAppStore = create<AppState>((set, get) => ({
     try {
       const { tags } = get()
       const tagSettings: { [name: string]: { color: string, visible: boolean } } = {}
-      
+
       tags.forEach(tag => {
         tagSettings[tag.name] = {
           color: tag.color,
           visible: tag.visible
         }
       })
-      
+
       localStorage.setItem('relation_tag_settings', JSON.stringify(tagSettings))
     } catch (error) {
       console.error('Failed to save tag settings:', error)
     }
+  },
+
+  setCameraTarget: (target) => {
+    set({ cameraTarget: target })
   }
 }))
 

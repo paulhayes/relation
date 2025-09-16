@@ -18,7 +18,7 @@ function ContactNode({ contact, position, tags, onRef }: ContactNodeProps) {
   const meshRef = useRef<Mesh>(null)
   const [hovered, setHovered] = useState(false)
   const [positionInitialized, setPositionInitialized] = useState(false)
-  const { selectContact } = useAppStore()
+  const { selectContact, setCameraTarget } = useAppStore()
   
   useEffect(() => {
     if (groupRef.current && onRef) {
@@ -46,6 +46,13 @@ function ContactNode({ contact, position, tags, onRef }: ContactNodeProps) {
     selectContact(contact)
   }
 
+  const handleDoubleClick = () => {
+    if (groupRef.current) {
+      const nodePosition = groupRef.current.position
+      setCameraTarget([nodePosition.x, nodePosition.y, nodePosition.z])
+    }
+  }
+
   useFrame((state) => {
     if (meshRef.current && hovered) {
       meshRef.current.rotation.x = Math.sin(state.clock.elapsedTime) * 0.1
@@ -60,6 +67,7 @@ function ContactNode({ contact, position, tags, onRef }: ContactNodeProps) {
         onPointerOver={() => setHovered(true)}
         onPointerOut={() => setHovered(false)}
         onClick={handleClick}
+        onDoubleClick={handleDoubleClick}
         scale={hovered ? 1.2 : 1}
       >
         <sphereGeometry args={[0.3, 16, 16]} />
