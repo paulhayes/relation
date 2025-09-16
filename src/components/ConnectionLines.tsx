@@ -85,7 +85,7 @@ function ConnectionLines({ contacts, tags, nodeRefs, visible }: ConnectionLinesP
         if (distance === 0) return
 
         // Create cylinder geometry
-        const geometry = new THREE.CylinderGeometry(0.3, 0.3, distance, 8)
+        const geometry = new THREE.CylinderGeometry(0.05, 0.05, distance, 8)
         
         // Create transformation matrix for this cylinder
         const midpoint = new THREE.Vector3()
@@ -146,16 +146,26 @@ function ConnectionLines({ contacts, tags, nodeRefs, visible }: ConnectionLinesP
       }
 
       // Create material
-      const material = new THREE.MeshBasicMaterial({
+      const material2 = new THREE.MeshBasicMaterial({
         color: new THREE.Color(color),
         transparent: true,
         opacity: 0.15,
-        depthWrite: false,
         depthTest: true
       })
 
+      const material1 = new THREE.MeshBasicMaterial({
+        transparent: true,
+        depthWrite: true,
+        depthTest: true,
+        colorWrite: false
+      })
+
       // Create single mesh for this color
-      const mesh = new THREE.Mesh(mergedGeometry, material)
+      const mats = [material1,material2]
+      mergedGeometry.addGroup(0,mergedGeometry.attributes.position.count,0);
+      mergedGeometry.addGroup(0,mergedGeometry.attributes.position.count,1);
+      const mesh = new THREE.Mesh(mergedGeometry, mats)
+      
       mesh.renderOrder = -1
       
       meshByColorRef.current[color] = mesh
