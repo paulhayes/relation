@@ -7,13 +7,13 @@
   "homepage": "./",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "tsc -p tsconfig.node.json && vite build",
     "preview": "vite preview",
     "test": "vitest",
     "test:run": "vitest run",
     "test:ui": "vitest --ui",
     "electron:dev": "concurrently \"vite\" \"cross-env NODE_ENV=development electron .\"",
-    "electron:build": "tsc && vite build && electron-builder",
+    "electron:build": "tsc -p tsconfig.node.json && vite build && electron-builder",
     "dist": "npm run electron:build --publish=never"
   },
   "keywords": [],
