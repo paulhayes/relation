@@ -5,7 +5,7 @@ import ContactSidebar from './components/ContactSidebar'
 import TagLegend from './components/TagLegend'
 import TagManager from './components/TagManager'
 import ErrorBoundary from './components/ErrorBoundary'
-import { useAppStore, mockContacts } from './stores/appStore'
+import { useAppStore } from './stores/appStore'
 import { googleAuthService } from './services/googleAuth'
 
 function App() {
@@ -40,7 +40,7 @@ function App() {
           } catch (contactError) {
             console.error('Failed to load contacts for existing auth:', contactError)
             // Fall back to mock data if contacts loading fails
-            useAppStore.setState({ contacts: mockContacts })
+            useAppStore.setState({ contacts: [] })
             useAppStore.getState().refreshTagsFromContacts()
           }
         } else {
@@ -65,7 +65,7 @@ function App() {
           } catch (contactError) {
             console.error('Failed to load contacts:', contactError)
             // Fall back to mock data if contacts loading fails
-            useAppStore.setState({ contacts: mockContacts })
+            useAppStore.setState({ contacts: [] })
             useAppStore.getState().refreshTagsFromContacts()
           }
         } catch (error) {
@@ -82,7 +82,7 @@ function App() {
     // Load mock data for development
     if (isAuthenticated && contacts.length === 0) {
       // In development, use mock data
-      useAppStore.setState({ contacts: mockContacts })
+      useAppStore.setState({ contacts: [] })
       useAppStore.getState().refreshTagsFromContacts()
     }
   }, [isAuthenticated, contacts.length])
