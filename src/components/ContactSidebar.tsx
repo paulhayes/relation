@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useAppStore } from '../stores/appStore'
 import { Contact } from '../types'
 
@@ -6,6 +6,18 @@ function ContactSidebar() {
   const { contacts, selectedContact, selectContact, tags, logout, updateContactTags } = useAppStore()
   const [searchTerm, setSearchTerm] = useState('')
   const [editingTags, setEditingTags] = useState<string | null>(null)
+  const contactRefs = useRef<{ [key: string]: HTMLDivElement | null }>({})
+
+  // Scroll to selected contact when it changes
+  useEffect(() => {
+    if (selectedContact && contactRefs.current[selectedContact.id]) {
+      const contactElement = contactRefs.current[selectedContact.id]
+      contactElement?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center'
+      })
+    }
+  }, [selectedContact])
 
   const filteredContacts = contacts.filter(contact =>
     contact.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -69,8 +81,9 @@ function ContactSidebar() {
       
       <div className="flex-1 overflow-y-auto p-4 space-y-2">
         {filteredContacts.map((contact) => (
-          <div 
+          <div
             key={contact.id}
+            ref={(el) => (contactRefs.current[contact.id] = el)}
             className={`card p-3 cursor-pointer transition-colors ${
               selectedContact?.id === contact.id ? 'ring-2 ring-blue-600' : 'hover:bg-gray-800/50'
             }`}

@@ -109,6 +109,7 @@ function ContactNode({ contact, position, tags, onRef }: ContactNodeProps) {
             maxWidth={3}
             textAlign="center"
           >
+
             {contact.tags.length > 0 ? contact.tags.join(', ') : 'No tags'}
           </Text>
         </Billboard>
