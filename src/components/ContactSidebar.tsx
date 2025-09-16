@@ -43,7 +43,7 @@ function ContactSidebar() {
     if (!contact) return
 
     const hasTag = contact.tags.includes(tagName)
-    const newTags = hasTag 
+    const newTags = hasTag
       ? contact.tags.filter(tag => tag !== tagName)
       : [...contact.tags, tagName]
 
@@ -51,6 +51,21 @@ function ContactSidebar() {
       await updateContactTags(contactId, newTags)
     } catch (error) {
       console.error('Failed to update contact tags:', error)
+    }
+  }
+
+  const handleAvatarClick = (contact: Contact, e: React.MouseEvent) => {
+    e.stopPropagation() // Prevent contact selection
+
+    // Extract the contact ID from the resourceName (format: people/c4545270353778401561)
+    const contactId = contact.id.startsWith('people/') ? contact.id.substring(7) : contact.id
+    const googleContactsUrl = `https://contacts.google.com/person/${contactId}`
+
+    // Use Electron API to open browser if available, otherwise fallback to window.open
+    if (typeof window !== 'undefined' && (window as any).electronAPI) {
+      (window as any).electronAPI.openOAuthUrl(googleContactsUrl)
+    } else {
+      window.open(googleContactsUrl, '_blank')
     }
   }
 
@@ -90,9 +105,11 @@ function ContactSidebar() {
             onClick={() => selectContact(contact)}
           >
             <div className="flex items-center space-x-3">
-              <div 
-                className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold text-white"
+              <div
+                className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold text-white cursor-pointer hover:ring-2 hover:ring-blue-400 transition-all"
                 style={{ backgroundColor: getAvatarColor(contact.name) }}
+                onClick={(e) => handleAvatarClick(contact, e)}
+                title="Open Google Contact page"
               >
                 {getContactInitials(contact.name)}
               </div>
