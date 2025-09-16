@@ -76,7 +76,7 @@ authServer.listen(3001, () => {
 })
 
 function createWindow(): void {
-  const preloadPath = join(__dirname, 'preload.cjs')
+  const preloadPath = join(__dirname, 'preload.js')
   console.log('Preload path:', preloadPath)
   console.log('__dirname:', __dirname)
   
