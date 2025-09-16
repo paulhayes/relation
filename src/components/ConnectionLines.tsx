@@ -85,7 +85,8 @@ function ConnectionLines({ contacts, tags, nodeRefs, visible }: ConnectionLinesP
         if (distance === 0) return
 
         // Create cylinder geometry
-        const geometry = new THREE.CylinderGeometry(0.05, 0.05, distance, 8)
+        const r = 0.05
+        const geometry = new THREE.CapsuleGeometry(r, distance, 8*r, 8*r)
         
         // Create transformation matrix for this cylinder
         const midpoint = new THREE.Vector3()
@@ -150,6 +151,9 @@ function ConnectionLines({ contacts, tags, nodeRefs, visible }: ConnectionLinesP
         color: new THREE.Color(color),
         transparent: true,
         opacity: 0.15,
+        blendEquation: THREE.AddEquation,
+        blendSrc: THREE.SrcAlphaFactor,
+        blendDst: THREE.OneFactor,
         depthTest: true
       })
 

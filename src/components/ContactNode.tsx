@@ -69,6 +69,7 @@ function ContactNode({ contact, position, tags, onRef }: ContactNodeProps) {
         onClick={handleClick}
         onDoubleClick={handleDoubleClick}
         scale={hovered ? 1.2 : 1}
+        renderOrder={1} 
       >
         <sphereGeometry args={[0.3, 16, 16]} />
         <meshStandardMaterial 
@@ -86,7 +87,8 @@ function ContactNode({ contact, position, tags, onRef }: ContactNodeProps) {
         lockX={false}
         lockY={false}
         lockZ={false}
-        position={[0, 0.8, 0]}
+        
+        
       >
         <Text
           fontSize={0.25}
@@ -95,7 +97,11 @@ function ContactNode({ contact, position, tags, onRef }: ContactNodeProps) {
           anchorY="middle"
           maxWidth={3}
           textAlign="center"
+          renderOrder={-2}
+          position={[0, 0.5, 0]}
+          
         >
+          <meshStandardMaterial depthTest={true} depthWrite={false}></meshStandardMaterial>
           {contact.name}
         </Text>
       </Billboard>
@@ -108,6 +114,7 @@ function ContactNode({ contact, position, tags, onRef }: ContactNodeProps) {
           lockY={false}
           lockZ={false}
           position={[0, 0.5, 0]}
+          
         >
           <Text
             fontSize={0.15}
@@ -116,34 +123,16 @@ function ContactNode({ contact, position, tags, onRef }: ContactNodeProps) {
             anchorY="middle"
             maxWidth={3}
             textAlign="center"
+            renderOrder={-2}
+            position={[0, 0.25, 0]}
           >
-
+            <meshStandardMaterial depthTest={true} depthWrite={false}></meshStandardMaterial>
             {contact.tags.length > 0 ? contact.tags.join(', ') : 'No tags'}
           </Text>
         </Billboard>
       )}
       
-      {/* Email on hover if available */}
-      {hovered && contact.email && (
-        <Billboard
-          follow={true}
-          lockX={false}
-          lockY={false}
-          lockZ={false}
-          position={[0, 0.3, 0]}
-        >
-          <Text
-            fontSize={0.12}
-            color="#888888"
-            anchorX="center"
-            anchorY="middle"
-            maxWidth={4}
-            textAlign="center"
-          >
-            {contact.email}
-          </Text>
-        </Billboard>
-      )}
+      
     </group>
   )
 }
