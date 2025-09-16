@@ -162,8 +162,9 @@ function ConnectionLines({ contacts, tags, nodeRefs, visible }: ConnectionLinesP
 
       // Create single mesh for this color
       const mats = [material1,material2]
-      mergedGeometry.addGroup(0,mergedGeometry.attributes.position.count,0);
-      mergedGeometry.addGroup(0,mergedGeometry.attributes.position.count,1);
+      const triCount = mergedGeometry.index ? mergedGeometry.index.count : 0;
+      mergedGeometry.addGroup(0,triCount,0);
+      mergedGeometry.addGroup(0,triCount,1);
       const mesh = new THREE.Mesh(mergedGeometry, mats)
       
       mesh.renderOrder = -1
