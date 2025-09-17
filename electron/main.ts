@@ -98,12 +98,11 @@ function createWindow(): void {
     mainWindow.show()
   })
 
-  if (isDev) {
-    mainWindow.loadURL('http://localhost:3000')
+  if(isDev){
     mainWindow.webContents.openDevTools()
-  } else {
-    mainWindow.loadFile(join(__dirname, '../dist/index.html'))
   }
+  
+  mainWindow.loadFile(join(__dirname, '../dist/index.html'))
 }
 
 app.whenReady().then(() => {

@@ -87,12 +87,9 @@ function createWindow() {
         mainWindow.show();
     });
     if (isDev) {
-        mainWindow.loadURL('http://localhost:3000');
         mainWindow.webContents.openDevTools();
     }
-    else {
-        mainWindow.loadFile(join(__dirname, '../dist/index.html'));
-    }
+    mainWindow.loadFile(join(__dirname, '../dist/index.html'));
 }
 app.whenReady().then(() => {
     Menu.setApplicationMenu(null);
