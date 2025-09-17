@@ -7,7 +7,7 @@ function TagLegend() {
 
   return (
     <div className="absolute top-4 right-4 z-10">
-      <div className="panel bg-panel-dark/95 backdrop-blur-sm">
+      <div className="panel bg-panel-dark/95 backdrop-blur-sm w-64">
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
           className="flex items-center justify-between w-full p-3 text-left hover:bg-card-dark rounded-lg transition-colors"
@@ -19,7 +19,7 @@ function TagLegend() {
         </button>
         
         {!isCollapsed && (
-          <div className="p-3 pt-0 min-w-64">
+          <div className="p-3 pt-0">
             <div className="space-y-2">
               {tags.map((tag) => (
                 <div 

@@ -41,8 +41,8 @@ function ForceControls({ onForceChange }: ForceControlsProps) {
   }
 
   return (
-    <div className="absolute top-28 right-4 z-10">
-      <div className="panel bg-panel-dark/95 backdrop-blur-sm">
+    <div className="absolute top-20 right-4 z-10">
+      <div className="panel bg-panel-dark/95 backdrop-blur-sm w-64">
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
           className="flex items-center justify-between w-full p-3 text-left hover:bg-card-dark rounded-lg transition-colors"
@@ -54,7 +54,7 @@ function ForceControls({ onForceChange }: ForceControlsProps) {
         </button>
         
         {!isCollapsed && (
-          <div className="p-3 pt-0 space-y-4 min-w-64">
+          <div className="p-3 pt-0 space-y-4">
             {/* Spring Constant */}
             <div>
               <label className="block text-sm text-secondary-dark mb-1">
