@@ -182,14 +182,14 @@ class GoogleAuthService {
 
     try {
       // Test the token by making a request to Google's tokeninfo endpoint
-      const response = await fetch(`https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=${this.accessToken}`)
+      // const response = await fetch(`https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=${this.accessToken}`)
       
-      if (response.ok) {
-        const tokenInfo = await response.json()
-        // Check if token has enough time left (more than 5 minutes)
-        const expiresIn = parseInt(tokenInfo.expires_in || '0')
-        return expiresIn > 300
-      }
+      // if (response.ok) {
+      //   const tokenInfo = await response.json()
+      //   // Check if token has enough time left (more than 5 minutes)
+      //   const expiresIn = parseInt(tokenInfo.expires_in || '0')
+      //   return expiresIn > 300
+      // }
       
       // Token is invalid, try to refresh if we have a refresh token
       if (this.refreshToken) {
