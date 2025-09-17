@@ -10,7 +10,7 @@ import * as THREE from 'three'
 
 const defaultForces: ForceSettings = {
   springConstant: 2.0,
-  idealDistance: 3.0,
+  unconnectedRepulsion: 3.0,
   connectedIdealDistance: 2.0,
   centerStrength: 0.02,
   damping: 0.95,

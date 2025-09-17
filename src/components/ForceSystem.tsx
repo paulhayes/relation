@@ -62,11 +62,11 @@ function ForceSystem({ contacts, tags, nodeRefs, forceSettings }: ForceSystemPro
 
         // Determine ideal distance based on relationship
         const hasSharedTags = sharedTags.length > 0
-        const idealDistance = forceSettings.connectedIdealDistance;
+        const connectedIdealDistance = forceSettings.connectedIdealDistance;
 
       
         // Spring force calculation: F = k * (current_distance - ideal_distance)
-        const displacement = distance - idealDistance
+        const displacement = distance - connectedIdealDistance
         const springForce = forceSettings.springConstant * displacement
 
         // Direction vector from node1 to node2
@@ -75,8 +75,8 @@ function ForceSystem({ contacts, tags, nodeRefs, forceSettings }: ForceSystemPro
           .normalize()
 
         // Apply spring force (positive displacement pushes apart, negative pulls together)
-        
-        const forceVector = (hasSharedTags) ? direction.clone().multiplyScalar(springForce) : direction.clone().multiplyScalar(-0.1/distance*distance)
+        //direction.clone().multiplyScalar(-0.05/distance*distance)
+        const forceVector = (hasSharedTags) ? direction.clone().multiplyScalar(springForce) : direction.clone().multiplyScalar(-forceSettings.unconnectedRepulsion/distance*distance)
         
         forces.current[contact1.id].add(forceVector)
         forces.current[contact2.id].sub(forceVector)

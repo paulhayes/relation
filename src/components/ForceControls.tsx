@@ -7,7 +7,7 @@ interface ForceControlsProps {
 
 export interface ForceSettings {
   springConstant: number
-  idealDistance: number
+  unconnectedRepulsion: number
   connectedIdealDistance: number
   centerStrength: number
   damping: number
@@ -17,12 +17,12 @@ export interface ForceSettings {
 
 const defaultForces: ForceSettings = {
   springConstant: 2.0,
-  idealDistance: 3.0,
-  connectedIdealDistance: 2.0,
+  unconnectedRepulsion: 0.1,
+  connectedIdealDistance: 3.0,
   centerStrength: 0.02,
   damping: 0.95,
   maxVelocity: 5,
-  visualizeConnections: false
+  visualizeConnections: true
 }
 
 function ForceControls({ onForceChange }: ForceControlsProps) {
@@ -74,32 +74,32 @@ function ForceControls({ onForceChange }: ForceControlsProps) {
                   {forces.springConstant.toFixed(1)}
                 </span>
               </div>
-              <p className="text-xs text-muted-dark mt-1">How strongly springs pull/push toward ideal distance</p>
+              <p className="text-xs text-muted-dark mt-1">How strongly springs pull/push toward Unconnected repulsion</p>
             </div>
 
-            {/* Ideal Distance for Unconnected */}
+            { /*Unconnected repulsion for Unconnected*/ }
             <div>
               <label className="block text-sm text-secondary-dark mb-1">
-                Default Distance
+                Unconnected Repulsion
               </label>
               <div className="flex items-center space-x-2">
                 <input
                   type="range"
-                  min="1"
-                  max="6"
-                  step="0.1"
-                  value={forces.idealDistance}
-                  onChange={(e) => handleForceChange('idealDistance', parseFloat(e.target.value))}
+                  min="0"
+                  max="0.3"
+                  step="0.01"
+                  value={forces.unconnectedRepulsion}
+                  onChange={(e) => handleForceChange('unconnectedRepulsion', parseFloat(e.target.value))}
                   className="flex-1 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
                 />
                 <span className="text-xs text-muted-dark w-8 text-right">
-                  {forces.idealDistance.toFixed(1)}
+                  {forces.unconnectedRepulsion.toFixed(1)}
                 </span>
               </div>
-              <p className="text-xs text-muted-dark mt-1">Ideal distance between unrelated nodes</p>
+              <p className="text-xs text-muted-dark mt-1">Unconnected repulsion between unrelated nodes</p>
             </div>
 
-            {/* Ideal Distance for Connected */}
+            {/* Unconnected repulsion for Connected */}
             <div>
               <label className="block text-sm text-secondary-dark mb-1">
                 Connected Distance
@@ -118,7 +118,7 @@ function ForceControls({ onForceChange }: ForceControlsProps) {
                   {forces.connectedIdealDistance.toFixed(1)}
                 </span>
               </div>
-              <p className="text-xs text-muted-dark mt-1">Ideal distance between nodes with shared tags</p>
+              <p className="text-xs text-muted-dark mt-1">Unconnected repulsion between nodes with shared tags</p>
             </div>
 
             {/* Center Attraction */}
@@ -130,8 +130,8 @@ function ForceControls({ onForceChange }: ForceControlsProps) {
                 <input
                   type="range"
                   min="0"
-                  max="0.1"
-                  step="0.005"
+                  max="1"
+                  step="0.01"
                   value={forces.centerStrength}
                   onChange={(e) => handleForceChange('centerStrength', parseFloat(e.target.value))}
                   className="flex-1 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
